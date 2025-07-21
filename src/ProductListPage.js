@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useCart } from './context/CartContext';
+import './ProductListPage.css';
 
 function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-
   const [viewMode, setViewMode] = useState(searchParams.get('view') || 'grid');
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || '');
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
   const [itemsPerPage, setItemsPerPage] = useState(Number(searchParams.get('perPage')) || 5);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [quantities, setQuantities] = useState({});
 
-  // Debounce efekat za search input (300ms)
+  const { addToCart } = useCart();
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -31,7 +33,6 @@ function ProductListPage() {
     },
   });
 
-  // Sync stanja sa URL-om
   useEffect(() => {
     setSearchParams({
       page: currentPage,
@@ -41,16 +42,24 @@ function ProductListPage() {
     });
   }, [currentPage, itemsPerPage, sortOption, viewMode, setSearchParams]);
 
-  if (isLoading) return <p>Učitavanje...</p>;
-  if (isError) return <p>Greška pri učitavanju proizvoda.</p>;
-  if (!data || !Array.isArray(data)) return <p>Greška: Nevalidan format podataka.</p>;
+  const handleQuantityChange = useCallback((productId, value) => {
+    const num = parseInt(value) || 1;
+    setQuantities((q) => ({ ...q, [productId]: num < 1 ? 1 : num }));
+  }, []);
 
-  // Filtriranje po nazivu (debounced)
+  const handleAddToCart = useCallback((product) => {
+    const quantity = quantities[product.id] || 1;
+    addToCart(product, quantity);
+  }, [addToCart, quantities]);
+
+  if (isLoading) return <p>Loading...</p>;
+  if (isError) return <p>Error while loading products.</p>;
+  if (!Array.isArray(data)) return <p>Wrong format.</p>;
+
   const filteredData = data.filter((p) =>
     p.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
-  // Sortiranje
   const sortedData = [...filteredData].sort((a, b) => {
     switch (sortOption) {
       case 'priceAsc':
@@ -66,143 +75,105 @@ function ProductListPage() {
     }
   });
 
-  // Paginacija
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Proizvodi</h1>
+    <div className="product-page">
+      <div className="top-bar">
+        <div className="sort-search-toggle">
+          <p className="result-count">
+            Showing {paginatedData.length} out of {filteredData.length}
+          </p>
 
-      {/* Grid/List toggle */}
-      <div style={{ marginBottom: '1rem' }}>
-        <button onClick={() => setViewMode('grid')} disabled={viewMode === 'grid'}>
-          Grid prikaz
-        </button>
-        <button onClick={() => setViewMode('list')} disabled={viewMode === 'list'} style={{ marginLeft: '10px' }}>
-          List prikaz
-        </button>
-      </div>
-
-      {/* Sortiranje */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="sort">Sortiraj po: </label>
-        <select
-          id="sort"
-          value={sortOption}
-          onChange={(e) => {
+          <select value={sortOption} onChange={(e) => {
             setSortOption(e.target.value);
             setCurrentPage(1);
-          }}
-        >
-          <option value="">-- Odaberi --</option>
-          <option value="priceAsc">Cena: Rastuće</option>
-          <option value="priceDesc">Cena: Opadajuće</option>
-          <option value="nameAsc">Naziv: A → Z</option>
-          <option value="nameDesc">Naziv: Z → A</option>
-        </select>
+          }}>
+            <option value="">Sort</option>
+            <option value="priceAsc">Price: Ascending</option>
+            <option value="priceDesc">Price: Descending</option>
+            <option value="nameAsc">Name: A → Z</option>
+            <option value="nameDesc">Name: Z → A</option>
+          </select>
+
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search..."
+          />
+          {searchTerm && <button onClick={() => setSearchTerm('')}>Obriši</button>}
+
+          <div className="view-toggle">
+            <button onClick={() => setViewMode('grid')} disabled={viewMode === 'grid'}>☷</button>
+            <button onClick={() => setViewMode('list')} disabled={viewMode === 'list'}>≣</button>
+          </div>
+        </div>
       </div>
 
-      {/* Stavke po stranici */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="perPage">Proizvoda po stranici: </label>
-        <select
-          id="perPage"
-          value={itemsPerPage}
-          onChange={(e) => {
-            setItemsPerPage(parseInt(e.target.value));
-            setCurrentPage(1);
-          }}
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={15}>15</option>
-          <option value={20}>20</option>
-        </select>
-      </div>
+      <div className="content-wrapper">
+        <aside className="sidebar" />
 
-      {/* Pretraga */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="search">Pretraga: </label>
-        <input
-          id="search"
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Pretraži po nazivu..."
-        />
-      </div>
+        <main className="main-content">
+          <div className="toolbar-top">
+            <label>
+              Products per page:
+              <select value={itemsPerPage} onChange={(e) => {
+                setItemsPerPage(parseInt(e.target.value));
+                setCurrentPage(1);
+              }}>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </select>
+            </label>
+          </div>
 
-      <p>Pronađeno: {filteredData.length} proizvoda</p>
+          <div className={`product-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
+            {paginatedData.length === 0 ? (
+              <p>No available products.</p>
+            ) : (
+              paginatedData.map((proizvod) => {
+                const glavnaSlika = proizvod.images?.find(img => !img.includes('.1.')) || proizvod.images?.[0] || 'images/placeholder.jpg';
+                const imagePath = `/${glavnaSlika}`;
 
-      {/* Prikaz proizvoda */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: viewMode === 'grid' ? 'row' : 'column',
-          gap: '20px',
-          flexWrap: viewMode === 'grid' ? 'wrap' : 'nowrap',
-        }}
-      >
-        {paginatedData.length === 0 ? (
-          <p>Nema dostupnih proizvoda.</p>
-        ) : (
-          paginatedData.map((proizvod) => (
-            <Link
-              key={proizvod.id}
-              to={`/products/${proizvod.id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  width: viewMode === 'grid' ? '200px' : '100%',
-                  display: 'flex',
-                  flexDirection: viewMode === 'grid' ? 'column' : 'row',
-                  alignItems: viewMode === 'grid' ? 'center' : 'flex-start',
-                  gap: viewMode === 'grid' ? '0' : '20px',
-                }}
-              >
-                <img
-                  src={proizvod.imageUrl}
-                  alt={proizvod.name}
-                  style={{
-                    width: viewMode === 'grid' ? '100%' : '150px',
-                    height: 'auto',
-                    objectFit: 'cover',
-                  }}
-                />
-                <div>
-                  <h3>{proizvod.name}</h3>
-                  <p>{proizvod.shortDescription}</p>
-                  <p><strong>{proizvod.price} €</strong></p>
-                </div>
-              </div>
-            </Link>
-          ))
-        )}
-      </div>
+                return (
+                  <div key={proizvod.id} className={`product-card ${viewMode === 'list' ? 'list' : ''}`}>
+                    <Link to={`/products/${proizvod.id}`} className="product-link">
+                      <img
+                        src={imagePath}
+                        alt={proizvod.name}
+                        style={{ width: '120px', height: '120px', objectFit: 'contain', alignSelf: 'center', marginBottom: '16px' }}
+                      />
+                      <h3>{proizvod.name}</h3>
+                      <p>{proizvod.shortDescription}</p>
+                      <p className="product-price">{proizvod.price} €</p>
+                    </Link>
 
-      {/* Paginacija */}
-      <div style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <button onClick={handlePrevPage} disabled={currentPage === 1}>
-          Prethodna
-        </button>
-        <span>Stranica {currentPage} od {totalPages}</span>
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>
-          Sledeća
-        </button>
+                    <div className="add-to-cart-area">
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantities[proizvod.id] || 1}
+                        onChange={(e) => handleQuantityChange(proizvod.id, e.target.value)}
+                      />
+                      <button onClick={() => handleAddToCart(proizvod)} className="add-to-cart-button">+</button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="pagination">
+            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+          </div>
+        </main>
       </div>
     </div>
   );
