@@ -1,70 +1,131 @@
-# Getting Started with Create React App
+# Mini E-commerce Full-Stack Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a mini e-commerce platform built for the Bosch FullStack Internship Task. It consists of a React frontend and a .NET 8 backend using RESTful architecture and modern development practices.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Tech Stack
 
-### `npm start`
+### Frontend
+- **React 18+** with functional components and hooks
+- **React Router** for navigation
+- **React Query** for server-side state
+- **Context API** for client-side state (cart)
+- **CSS Modules** for styling
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Backend
+- **ASP.NET Core 8 Web API**
+- **Entity Framework Core** with SQLite
+- **AutoMapper** for DTO mapping
+- **CORS** for frontend integration
+- **RESTful API** with standard HTTP status codes
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🧩 Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### ✅ Product Listing Page (PLP)
+- Grid and list views with toggle
+- Product cards with image, name, price, short description, quantity selector, and Add to Cart
+- Responsive mobile-first design
+- Loading and empty states
 
-### `npm run build`
+### ✅ Product Detail Page (PDP)
+- Image gallery
+- Full description and technical specifications table
+- Breadcrumb navigation
+- Handles invalid product IDs with 404 fallback
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### ✅ Search & Filtering
+- Debounced (300ms) live search by product name
+- Clear search functionality
+- Displays result count
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### ✅ Sorting & Pagination
+- Sort by Price (Low→High, High→Low) and Name (A→Z, Z→A)
+- Pagination with: Previous/Next, first/last, and configurable items per page
+- Maintains sorting/search state during pagination
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### ✅ Shopping Cart
+- Add products to cart with selected quantity
+- Update/remove items in cart
+- Cart icon with item count in header
+- Cart state persists between navigations (via Context API)
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🛠️ Getting Started
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Prerequisites
+- .NET 8 SDK
+- Node.js & npm
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Backend Setup
 
-## Learn More
+```bash
+cd MiniECommerceSolution/MiniECommerce.Api
+dotnet restore
+dotnet run
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The API will be available at `https://localhost:7047`.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### Frontend Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+cd mini-ecommerce-frontend
+npm install
+npm start
+```
 
-### Analyzing the Bundle Size
+The React app will run at `http://localhost:3000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 📁 Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```
+MiniECommerceSolution/
+  └── MiniECommerce.Api/       # ASP.NET Web API
+mini-ecommerce-frontend/
+  └── src/                     # React frontend
+```
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🧠 Architecture Decisions
 
-### Deployment
+- Used React Query for efficient API caching and loading state management
+- Used Context API instead of Redux for simplicity (single client-side state: cart)
+- SQLite chosen for simplicity and ease of setup
+- File-based image storage via `wwwroot/images/product_{id}` for simplicity
+- Used AutoMapper to cleanly separate DTOs from EF models
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 💬 Self-Assessment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### ✅ Challenges
+
+- Getting everything from backend to show correctly on the frontend  
+- Setting up the database, writing the API with filtering, sorting, pagination, and then consuming it properly in React using React Query took a lot of debugging and trial and error.
+- Dynamically loading images for each product from folders on the backend and making sure the right image shows on the frontend.
+- Making the frontend design look clean and user-friendly
+- Ensuring that the cart behaves correctly (add, remove, change quantity)
+- Managing all the UI states — loading, empty results, error cases
+
+### 🔧 What I’d Improve with More Time
+
+- I'd polish the UI even further and invest time in animations and accessibility (keyboard navigation, screen readers).
+- I’d write automated tests (unit and integration) for both backend endpoints and frontend components.
+
+---
+
+## 📬 Submission
+
+This project is part of the Bosch FullStack Internship e-Commerce Task.  
+For any questions, feel free to contact me.
