@@ -126,6 +126,5 @@ mini-ecommerce-frontend/
 ---
 
 ## 📬 Submission
-
-This project is part of the Bosch FullStack Internship e-Commerce Task.  
+  
 For any questions, feel free to contact me.
