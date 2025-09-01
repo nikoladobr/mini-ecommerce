@@ -1,6 +1,6 @@
 # Mini E-commerce Full-Stack Application
 
-This project is a mini e-commerce platform built for the Bosch FullStack Internship Task. It consists of a React frontend and a .NET 8 backend using RESTful architecture and modern development practices.
+This project is a mini e-commerce platform. It consists of a React frontend and a .NET 8 backend using RESTful architecture and modern development practices.
 
 ---
 
